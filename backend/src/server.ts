@@ -56,6 +56,23 @@ app.use(express.json({ limit: '1mb' }));
 // 1. Mount Auth Routes (MongoDB backed User accounts)
 app.use('/api/auth', authRoutes);
 
+// 0. Root Endpoint (Welcome & Status)
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'WatchRealm Backend API & WebSocket Server',
+    status: 'online',
+    version: '1.0.0',
+    database: isDBConnected() ? `connected (MongoDB: ${getDBName()})` : 'in-memory mode',
+    clientApp: 'https://watchrealm-stream.vercel.app',
+    endpoints: {
+      health: '/api/health',
+      rooms: '/api/rooms',
+      auth: '/api/auth',
+    },
+    activeRooms: RoomManager.getInstance().listRooms().length,
+  });
+});
+
 // 2. Health & Status
 app.get('/api/health', (_req, res) => {
   res.json({
