@@ -3,7 +3,7 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import { connectDB, isDBConnected } from './config/db';
+import { connectDB, isDBConnected, getDBName } from './config/db';
 import { registerSocketHandlers } from './websocket/socketHandler';
 import { RoomManager } from './services/RoomManager';
 import { RoomMongoModel } from './models/RoomModel';
@@ -61,7 +61,7 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'online',
     service: 'WatchRealm Real-Time Sync & WebSocket Server',
-    database: isDBConnected() ? 'connected (MongoDB)' : 'in-memory mode',
+    database: isDBConnected() ? `connected (MongoDB: ${getDBName()})` : 'in-memory mode',
     timestamp: Date.now(),
     activeRooms: RoomManager.getInstance().listRooms().length,
   });

@@ -15,6 +15,7 @@ export const connectDB = async (): Promise<void> => {
 
   try {
     const conn = await mongoose.connect(mongoUri, {
+      dbName: 'watchrealm',
       serverSelectionTimeoutMS: 10000,
     });
     isConnected = true;
@@ -27,3 +28,4 @@ export const connectDB = async (): Promise<void> => {
 };
 
 export const isDBConnected = (): boolean => isConnected;
+export const getDBName = (): string => mongoose.connection?.name || 'none';
