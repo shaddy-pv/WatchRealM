@@ -40,8 +40,6 @@ import {
   Globe,
   Lock,
   Trash2,
-  Pencil,
-  Crown,
   Clock,
   Sliders,
   ShieldAlert,
@@ -96,7 +94,7 @@ export const WatchPartyRoom: React.FC<WatchPartyRoomProps> = ({
   isPrivate: propIsPrivate = false,
 }) => {
   // Dynamic, Production-Ready Username Resolution
-  const [userName, setUserName] = useState<string>(() => {
+  const [userName] = useState<string>(() => {
     // 1. If propUserName was passed and is not an auto-generated random Explorer tag
     if (propUserName && !propUserName.startsWith('Explorer-')) {
       return propUserName;
@@ -1973,7 +1971,6 @@ export const WatchPartyRoom: React.FC<WatchPartyRoomProps> = ({
                   const displayName = isMe
                     ? userName
                     : (p.username || 'Explorer');
-                  const isAllowedCam = p.role === 'HOST' || p.role === 'MODERATOR' || allowedCamUserIds.includes(p.id);
                   const isUserCamActive = isMe ? isCameraOn : !!mediaStates[p.id]?.isCameraOn;
 
                   return (

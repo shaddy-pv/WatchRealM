@@ -12,19 +12,45 @@ import authRoutes from './routes/authRoutes';
 const app = express();
 const server = http.createServer(app);
 
-const corsOrigin = process.env.CORS_ORIGIN
-  ? (process.env.CORS_ORIGIN === '*' ? '*' : process.env.CORS_ORIGIN.split(',').map((o) => o.trim()))
-  : '*';
+const rawCorsOrigin = process.env.CORS_ORIGIN || '*';
+const allowedOrigins = rawCorsOrigin === '*'
+  ? ['*']
+  : rawCorsOrigin.split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean);
+
+const isOriginAllowed = (origin?: string): boolean => {
+  if (!origin) return true; // allow non-browser requests (Postman, curl, server-to-server)
+  const clean = origin.replace(/\/+$/, '');
+  if (allowedOrigins.includes('*')) return true;
+  if (allowedOrigins.includes(clean) || allowedOrigins.includes(origin)) return true;
+  // Automatically whitelist production Vercel frontend, Vercel preview domains, and local dev
+  if (clean === 'https://watchrealm-stream.vercel.app') return true;
+  if (clean.endsWith('.vercel.app')) return true;
+  if (/^https?:\/\/localhost(:\d+)?$/.test(clean) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(clean)) return true;
+  return false;
+};
+
+const corsDelegate = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  if (isOriginAllowed(origin)) {
+    callback(null, true);
+  } else {
+    callback(null, false);
+  }
+};
 
 const io = new Server(server, {
   cors: {
-    origin: corsOrigin,
+    origin: corsDelegate,
     methods: ['GET', 'POST'],
     credentials: true,
   },
 });
 
-app.use(cors({ origin: corsOrigin, credentials: true }));
+app.use(cors({
+  origin: corsDelegate,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
 app.use(express.json({ limit: '1mb' }));
 
 // 1. Mount Auth Routes (MongoDB backed User accounts)

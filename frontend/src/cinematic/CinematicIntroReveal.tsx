@@ -81,7 +81,7 @@ export const CinematicIntroReveal: React.FC<CinematicIntroRevealProps> = ({
     });
 
     // Story mode video: start buffering immediately
-    const storyVideoSrc = '/sotry-mode-comingsoon.mp4';
+    const storyVideoSrc = '/story-mode-coming-soon.mp4';
     injectPreloadLink(storyVideoSrc, 'video');
     const hiddenVideo = document.createElement('video');
     hiddenVideo.src = storyVideoSrc;
