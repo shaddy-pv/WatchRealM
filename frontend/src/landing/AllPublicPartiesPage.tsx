@@ -308,9 +308,10 @@ export const AllPublicPartiesPage: React.FC<AllPublicPartiesPageProps> = ({
         party.hostName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         party.id.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // District filter
+      // District filter: Only apply district filter in public exploration mode.
+      // In "My Parties" mode, show ALL parties created by the user across all realms!
       let matchesDistrict = true;
-      if (selectedDistrict !== 'all') {
+      if (!filterMyPartiesOnly && selectedDistrict !== 'all') {
         const sel = selectedDistrict.toLowerCase();
         const pGenre = party.genre.toLowerCase();
         if (sel === 'scifi' || sel === 'sci-fi') {
@@ -611,12 +612,18 @@ export const AllPublicPartiesPage: React.FC<AllPublicPartiesPageProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#e8c27a]/10 border border-[#e8c27a]/35 text-[#e8c27a] text-xs font-bold tracking-widest uppercase backdrop-blur-xl shadow-[0_2px_12px_rgba(232,194,122,0.15)] cursor-pointer hover:bg-[#e8c27a]/18 hover:border-[#e8c27a]/60 hover:shadow-[0_4px_20px_rgba(232,194,122,0.25)] active:scale-95 transition-all select-none"
                 title="Switch Genre Realm"
               >
-                {currentGenreTheme.badgeIcon ? (
+                {currentGenreTheme.badgeIcon && !filterMyPartiesOnly ? (
                   <span className="text-sm leading-none">{currentGenreTheme.badgeIcon}</span>
                 ) : (
                   <Globe className="w-3.5 h-3.5 text-[#e8c27a]/80" />
                 )}
-                <span>{selectedDistrict === 'all' ? 'All Realms' : `${currentDistrictLabel} Realm`}</span>
+                <span>
+                  {filterMyPartiesOnly
+                    ? 'All Realms (My Parties)'
+                    : selectedDistrict === 'all'
+                    ? 'All Realms'
+                    : `${currentDistrictLabel} Realm`}
+                </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#e8c27a]/70 transition-transform duration-200 ${isGenreDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -700,7 +707,9 @@ export const AllPublicPartiesPage: React.FC<AllPublicPartiesPageProps> = ({
           <div className="flex flex-wrap items-center gap-3">
             <div className="text-xs text-stone-400 font-medium">
               Showing {filterMyPartiesOnly ? 'your created' : 'live'} rooms in{' '}
-              <span className="text-[#e8c27a] font-semibold">{currentDistrictLabel}</span>
+              <span className="text-[#e8c27a] font-semibold">
+                {filterMyPartiesOnly ? 'All Realms (My Parties)' : currentDistrictLabel}
+              </span>
             </div>
 
             {/* Quick Toggle for My Parties */}
@@ -708,7 +717,25 @@ export const AllPublicPartiesPage: React.FC<AllPublicPartiesPageProps> = ({
               type="button"
               onClick={() => {
                 sounds.playClick();
-                setFilterMyPartiesOnly((prev) => !prev);
+                if (!filterMyPartiesOnly) {
+                  // Switch to My Parties: reset district to 'all' so ALL user parties show
+                  setSelectedDistrict('all');
+                  setFilterMyPartiesOnly(true);
+                  if (typeof window !== 'undefined') {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('genre');
+                    url.searchParams.set('myParties', '1');
+                    window.history.pushState({}, '', url.pathname + url.search);
+                  }
+                } else {
+                  // Switch back to public rooms
+                  setFilterMyPartiesOnly(false);
+                  if (typeof window !== 'undefined') {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('myParties');
+                    window.history.pushState({}, '', url.pathname + url.search);
+                  }
+                }
               }}
               className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border ${
                 filterMyPartiesOnly
